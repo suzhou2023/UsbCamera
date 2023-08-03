@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1996, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2010, 2018, 2022, D. R. Commander.
+ * Copyright (C) 2010, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -17,16 +17,12 @@
  *      -sample HxV[,HxV,...]   Set component sampling factors
  */
 
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_DEPRECATE
-#endif
-
 #include "cdjpeg.h"             /* Common decls for cjpeg/djpeg applications */
 #include <ctype.h>              /* to declare isdigit(), isspace() */
 
 
 LOCAL(int)
-text_getc(FILE *file)
+text_getc (FILE *file)
 /* Read next char, skipping over any comments (# to end of line) */
 /* A comment/newline sequence is returned as a newline */
 {
@@ -43,7 +39,7 @@ text_getc(FILE *file)
 
 
 LOCAL(boolean)
-read_text_integer(FILE *file, long *result, int *termchar)
+read_text_integer (FILE *file, long *result, int *termchar)
 /* Read an unsigned decimal integer from a file, store it in result */
 /* Reads one trailing character after the integer; returns it in termchar */
 {
@@ -59,14 +55,14 @@ read_text_integer(FILE *file, long *result, int *termchar)
     }
   } while (isspace(ch));
 
-  if (!isdigit(ch)) {
+  if (! isdigit(ch)) {
     *termchar = ch;
     return FALSE;
   }
 
   val = ch - '0';
   while ((ch = text_getc(file)) != EOF) {
-    if (!isdigit(ch))
+    if (! isdigit(ch))
       break;
     val *= 10;
     val += ch - '0';
@@ -78,11 +74,12 @@ read_text_integer(FILE *file, long *result, int *termchar)
 
 
 #if JPEG_LIB_VERSION < 70
-static int q_scale_factor[NUM_QUANT_TBLS] = { 100, 100, 100, 100 };
+static int q_scale_factor[NUM_QUANT_TBLS] = {100, 100, 100, 100};
 #endif
 
 GLOBAL(boolean)
-read_quant_tables(j_compress_ptr cinfo, char *filename, boolean force_baseline)
+read_quant_tables (j_compress_ptr cinfo, char *filename,
+                   boolean force_baseline)
 /* Read a set of quantization tables from the specified file.
  * The file is plain ASCII text: decimal numbers with whitespace between.
  * Comments preceded by '#' may be included in the file.
@@ -110,14 +107,14 @@ read_quant_tables(j_compress_ptr cinfo, char *filename, boolean force_baseline)
       fclose(fp);
       return FALSE;
     }
-    table[0] = (unsigned int)val;
+    table[0] = (unsigned int) val;
     for (i = 1; i < DCTSIZE2; i++) {
-      if (!read_text_integer(fp, &val, &termchar)) {
+      if (! read_text_integer(fp, &val, &termchar)) {
         fprintf(stderr, "Invalid table data in file %s\n", filename);
         fclose(fp);
         return FALSE;
       }
-      table[i] = (unsigned int)val;
+      table[i] = (unsigned int) val;
     }
 #if JPEG_LIB_VERSION >= 70
     jpeg_add_quant_table(cinfo, tblno, table, cinfo->q_scale_factor[tblno],
@@ -143,14 +140,14 @@ read_quant_tables(j_compress_ptr cinfo, char *filename, boolean force_baseline)
 #ifdef C_MULTISCAN_FILES_SUPPORTED
 
 LOCAL(boolean)
-read_scan_integer(FILE *file, long *result, int *termchar)
+read_scan_integer (FILE *file, long *result, int *termchar)
 /* Variant of read_text_integer that always looks for a non-space termchar;
  * this simplifies parsing of punctuation in scan scripts.
  */
 {
   register int ch;
 
-  if (!read_text_integer(file, result, termchar))
+  if (! read_text_integer(file, result, termchar))
     return FALSE;
   ch = *termchar;
   while (ch != EOF && isspace(ch))
@@ -172,7 +169,7 @@ read_scan_integer(FILE *file, long *result, int *termchar)
 
 
 GLOBAL(boolean)
-read_scan_script(j_compress_ptr cinfo, char *filename)
+read_scan_script (j_compress_ptr cinfo, char *filename)
 /* Read a scan script from the specified text file.
  * Each entry in the file defines one scan to be emitted.
  * Entries are separated by semicolons ';'.
@@ -209,7 +206,7 @@ read_scan_script(j_compress_ptr cinfo, char *filename)
       fclose(fp);
       return FALSE;
     }
-    scanptr->component_index[0] = (int)val;
+    scanptr->component_index[0] = (int) val;
     ncomps = 1;
     while (termchar == ' ') {
       if (ncomps >= MAX_COMPS_IN_SCAN) {
@@ -218,29 +215,29 @@ read_scan_script(j_compress_ptr cinfo, char *filename)
         fclose(fp);
         return FALSE;
       }
-      if (!read_scan_integer(fp, &val, &termchar))
+      if (! read_scan_integer(fp, &val, &termchar))
         goto bogus;
-      scanptr->component_index[ncomps] = (int)val;
+      scanptr->component_index[ncomps] = (int) val;
       ncomps++;
     }
     scanptr->comps_in_scan = ncomps;
     if (termchar == ':') {
-      if (!read_scan_integer(fp, &val, &termchar) || termchar != ' ')
+      if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
         goto bogus;
-      scanptr->Ss = (int)val;
-      if (!read_scan_integer(fp, &val, &termchar) || termchar != ' ')
+      scanptr->Ss = (int) val;
+      if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
         goto bogus;
-      scanptr->Se = (int)val;
-      if (!read_scan_integer(fp, &val, &termchar) || termchar != ' ')
+      scanptr->Se = (int) val;
+      if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
         goto bogus;
-      scanptr->Ah = (int)val;
-      if (!read_scan_integer(fp, &val, &termchar))
+      scanptr->Ah = (int) val;
+      if (! read_scan_integer(fp, &val, &termchar))
         goto bogus;
-      scanptr->Al = (int)val;
+      scanptr->Al = (int) val;
     } else {
       /* set non-progressive parameters */
       scanptr->Ss = 0;
-      scanptr->Se = DCTSIZE2 - 1;
+      scanptr->Se = DCTSIZE2-1;
       scanptr->Ah = 0;
       scanptr->Al = 0;
     }
@@ -265,9 +262,9 @@ bogus:
      * but if you want to compress multiple images you'd want JPOOL_PERMANENT.
      */
     scanptr = (jpeg_scan_info *)
-      (*cinfo->mem->alloc_small) ((j_common_ptr)cinfo, JPOOL_IMAGE,
+      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
                                   scanno * sizeof(jpeg_scan_info));
-    memcpy(scanptr, scans, scanno * sizeof(jpeg_scan_info));
+    MEMCOPY(scanptr, scans, scanno * sizeof(jpeg_scan_info));
     cinfo->scan_info = scanptr;
     cinfo->num_scans = scanno;
   }
@@ -280,8 +277,7 @@ bogus:
 
 
 #if JPEG_LIB_VERSION < 70
-/* These are the sample quantization tables given in Annex K (Clause K.1) of
- * Recommendation ITU-T T.81 (1992) | ISO/IEC 10918-1:1994.
+/* These are the sample quantization tables given in JPEG spec section K.1.
  * The spec says that the values given produce "good" quality, and
  * when divided by 2, "very good" quality.
  */
@@ -308,18 +304,18 @@ static const unsigned int std_chrominance_quant_tbl[DCTSIZE2] = {
 
 
 LOCAL(void)
-jpeg_default_qtables(j_compress_ptr cinfo, boolean force_baseline)
+jpeg_default_qtables (j_compress_ptr cinfo, boolean force_baseline)
 {
-  jpeg_add_quant_table(cinfo, 0, std_luminance_quant_tbl, q_scale_factor[0],
-                       force_baseline);
-  jpeg_add_quant_table(cinfo, 1, std_chrominance_quant_tbl, q_scale_factor[1],
-                       force_baseline);
+  jpeg_add_quant_table(cinfo, 0, std_luminance_quant_tbl,
+                       q_scale_factor[0], force_baseline);
+  jpeg_add_quant_table(cinfo, 1, std_chrominance_quant_tbl,
+                       q_scale_factor[1], force_baseline);
 }
 #endif
 
 
 GLOBAL(boolean)
-set_quality_ratings(j_compress_ptr cinfo, char *arg, boolean force_baseline)
+set_quality_ratings (j_compress_ptr cinfo, char *arg, boolean force_baseline)
 /* Process a quality-ratings parameter string, of the form
  *     N[,N,...]
  * If there are more q-table slots than parameters, the last value is replicated.
@@ -342,8 +338,8 @@ set_quality_ratings(j_compress_ptr cinfo, char *arg, boolean force_baseline)
 #else
       q_scale_factor[tblno] = jpeg_quality_scaling(val);
 #endif
-      while (*arg && *arg++ != ','); /* advance to next segment of arg
-                                        string */
+      while (*arg && *arg++ != ',') /* advance to next segment of arg string */
+        ;
     } else {
       /* reached end of parameter, set remaining factors to last value */
 #if JPEG_LIB_VERSION >= 70
@@ -359,7 +355,7 @@ set_quality_ratings(j_compress_ptr cinfo, char *arg, boolean force_baseline)
 
 
 GLOBAL(boolean)
-set_quant_slots(j_compress_ptr cinfo, char *arg)
+set_quant_slots (j_compress_ptr cinfo, char *arg)
 /* Process a quantization-table-selectors parameter string, of the form
  *     N[,N,...]
  * If there are more components than parameters, the last value is replicated.
@@ -378,12 +374,12 @@ set_quant_slots(j_compress_ptr cinfo, char *arg)
         return FALSE;
       if (val < 0 || val >= NUM_QUANT_TBLS) {
         fprintf(stderr, "JPEG quantization tables are numbered 0..%d\n",
-                NUM_QUANT_TBLS - 1);
+                NUM_QUANT_TBLS-1);
         return FALSE;
       }
       cinfo->comp_info[ci].quant_tbl_no = val;
-      while (*arg && *arg++ != ','); /* advance to next segment of arg
-                                        string */
+      while (*arg && *arg++ != ',') /* advance to next segment of arg string */
+        ;
     } else {
       /* reached end of parameter, set remaining components to last table */
       cinfo->comp_info[ci].quant_tbl_no = val;
@@ -394,7 +390,7 @@ set_quant_slots(j_compress_ptr cinfo, char *arg)
 
 
 GLOBAL(boolean)
-set_sample_factors(j_compress_ptr cinfo, char *arg)
+set_sample_factors (j_compress_ptr cinfo, char *arg)
 /* Process a sample-factors parameter string, of the form
  *     HxV[,HxV,...]
  * If there are more components than parameters, "1x1" is assumed for the rest.
@@ -416,8 +412,8 @@ set_sample_factors(j_compress_ptr cinfo, char *arg)
       }
       cinfo->comp_info[ci].h_samp_factor = val1;
       cinfo->comp_info[ci].v_samp_factor = val2;
-      while (*arg && *arg++ != ',');  /* advance to next segment of arg
-                                         string */
+      while (*arg && *arg++ != ',') /* advance to next segment of arg string */
+        ;
     } else {
       /* reached end of parameter, set remaining components to 1x1 sampling */
       cinfo->comp_info[ci].h_samp_factor = 1;

@@ -6,19 +6,10 @@ project(${PROJECT_NAME} VERSION 1.0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../libusb")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../libuvc/include")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../rapidjson/include")
-
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../libs")
 
 add_library(
         ${PROJECT_NAME}
-
         SHARED
-
         _onload.cpp
         utilbase.cpp
         UVCCamera.cpp

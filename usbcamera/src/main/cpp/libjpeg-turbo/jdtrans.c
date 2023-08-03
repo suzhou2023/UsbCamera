@@ -3,8 +3,8 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1995-1997, Thomas G. Lane.
- * libjpeg-turbo Modifications:
- * Copyright (C) 2020, 2022, D. R. Commander.
+ * It was modified by The libjpeg-turbo Project to include only code relevant
+ * to libjpeg-turbo.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -16,11 +16,10 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
-#include "jpegapicomp.h"
 
 
 /* Forward declarations */
-LOCAL(void) transdecode_master_selection(j_decompress_ptr cinfo);
+LOCAL(void) transdecode_master_selection (j_decompress_ptr cinfo);
 
 
 /*
@@ -46,11 +45,8 @@ LOCAL(void) transdecode_master_selection(j_decompress_ptr cinfo);
  */
 
 GLOBAL(jvirt_barray_ptr *)
-jpeg_read_coefficients(j_decompress_ptr cinfo)
+jpeg_read_coefficients (j_decompress_ptr cinfo)
 {
-  if (cinfo->master->lossless)
-    ERREXIT(cinfo, JERR_NOTIMPL);
-
   if (cinfo->global_state == DSTATE_READY) {
     /* First call: initialize active modules */
     transdecode_master_selection(cinfo);
@@ -62,7 +58,7 @@ jpeg_read_coefficients(j_decompress_ptr cinfo)
       int retcode;
       /* Call progress monitor hook if present */
       if (cinfo->progress != NULL)
-        (*cinfo->progress->progress_monitor) ((j_common_ptr)cinfo);
+        (*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
       /* Absorb some more input */
       retcode = (*cinfo->inputctl->consume_input) (cinfo);
       if (retcode == JPEG_SUSPENDED)
@@ -74,7 +70,7 @@ jpeg_read_coefficients(j_decompress_ptr cinfo)
           (retcode == JPEG_ROW_COMPLETED || retcode == JPEG_REACHED_SOS)) {
         if (++cinfo->progress->pass_counter >= cinfo->progress->pass_limit) {
           /* startup underestimated number of scans; ratchet up one scan */
-          cinfo->progress->pass_limit += (long)cinfo->total_iMCU_rows;
+          cinfo->progress->pass_limit += (long) cinfo->total_iMCU_rows;
         }
       }
     }
@@ -101,7 +97,7 @@ jpeg_read_coefficients(j_decompress_ptr cinfo)
  */
 
 LOCAL(void)
-transdecode_master_selection(j_decompress_ptr cinfo)
+transdecode_master_selection (j_decompress_ptr cinfo)
 {
   /* This is effectively a buffered-image operation. */
   cinfo->buffered_image = TRUE;
@@ -130,13 +126,10 @@ transdecode_master_selection(j_decompress_ptr cinfo)
   }
 
   /* Always get a full-image coefficient buffer. */
-  if (cinfo->data_precision == 12)
-    j12init_d_coef_controller(cinfo, TRUE);
-  else
-    jinit_d_coef_controller(cinfo, TRUE);
+  jinit_d_coef_controller(cinfo, TRUE);
 
   /* We can now tell the memory manager to allocate virtual arrays. */
-  (*cinfo->mem->realize_virt_arrays) ((j_common_ptr)cinfo);
+  (*cinfo->mem->realize_virt_arrays) ((j_common_ptr) cinfo);
 
   /* Initialize input side of decompressor to consume first scan. */
   (*cinfo->inputctl->start_input_pass) (cinfo);
@@ -155,7 +148,7 @@ transdecode_master_selection(j_decompress_ptr cinfo)
       nscans = 1;
     }
     cinfo->progress->pass_counter = 0L;
-    cinfo->progress->pass_limit = (long)cinfo->total_iMCU_rows * nscans;
+    cinfo->progress->pass_limit = (long) cinfo->total_iMCU_rows * nscans;
     cinfo->progress->completed_passes = 0;
     cinfo->progress->total_passes = 1;
   }

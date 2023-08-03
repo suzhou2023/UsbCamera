@@ -3,8 +3,8 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * libjpeg-turbo Modifications:
- * Copyright (C) 2022, D. R. Commander.
+ * It was modified by The libjpeg-turbo Project to include only code relevant
+ * to libjpeg-turbo.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -19,13 +19,11 @@
  * Hence the magnitude should always fit in 10 or 14 bits respectively.
  */
 
-/* The progressive Huffman encoder uses an unsigned 16-bit data type to store
- * absolute values of coefficients, because it is possible to inject a
- * coefficient value of -32768 into the encoder by attempting to transform a
- * malformed 12-bit JPEG image, and the absolute value of -32768 would overflow
- * a signed 16-bit integer.
- */
-typedef unsigned short UJCOEF;
+#if BITS_IN_JSAMPLE == 8
+#define MAX_COEF_BITS 10
+#else
+#define MAX_COEF_BITS 14
+#endif
 
 /* Derived data constructed for each Huffman table */
 
@@ -36,9 +34,10 @@ typedef struct {
 } c_derived_tbl;
 
 /* Expand a Huffman table definition into the derived format */
-EXTERN(void) jpeg_make_c_derived_tbl(j_compress_ptr cinfo, boolean isDC,
-                                     int tblno, c_derived_tbl **pdtbl);
+EXTERN(void) jpeg_make_c_derived_tbl
+        (j_compress_ptr cinfo, boolean isDC, int tblno,
+         c_derived_tbl ** pdtbl);
 
 /* Generate an optimal table definition given the specified counts */
-EXTERN(void) jpeg_gen_optimal_table(j_compress_ptr cinfo, JHUFF_TBL *htbl,
-                                    long freq[]);
+EXTERN(void) jpeg_gen_optimal_table
+        (j_compress_ptr cinfo, JHUFF_TBL *htbl, long freq[]);

@@ -10,9 +10,12 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libjpeg-turbo")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libjpeg-turbo/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libusb")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libuvc/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/rapidjson/include")
 
 
-add_subdirectory(libjpeg-turbo)
-add_subdirectory(jni/libusb)
-add_subdirectory(jni/libuvc)
-add_subdirectory(jni/UVCCamera)
+
+#add_subdirectory(libjpeg-turbo)
+add_subdirectory(libusb)
+add_subdirectory(libuvc)
+add_subdirectory(UVCCamera)

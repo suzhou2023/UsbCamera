@@ -1,4 +1,4 @@
-.TH CJPEG 1 "29 June 2023"
+.TH CJPEG 1 "17 February 2016"
 .SH NAME
 cjpeg \- compress an image file to a JPEG file
 .SH SYNOPSIS
@@ -16,7 +16,8 @@ cjpeg \- compress an image file to a JPEG file
 compresses the named image file, or the standard input if no file is
 named, and produces a JPEG/JFIF file on the standard output.
 The currently supported input file formats are: PPM (PBMPLUS color
-format), PGM (PBMPLUS grayscale format), BMP, GIF, and Targa.
+format), PGM (PBMPLUS grayscale format), BMP, Targa, and RLE (Utah Raster
+Toolkit format).  (RLE is supported only if the URT library is available.)
 .SH OPTIONS
 All switch names may be abbreviated; for example,
 .B \-grayscale
@@ -40,8 +41,12 @@ Scale quantization tables to adjust image quality.  Quality is 0 (worst) to
 100 (best); default is 75.  (See below for more info.)
 .TP
 .B \-grayscale
-Create monochrome JPEG file from color input.  By saying
-.BR \-grayscale,
+Create monochrome JPEG file from color input.  Be sure to use this switch when
+compressing a grayscale BMP file, because
+.B cjpeg
+isn't bright enough to notice whether a BMP file uses only shades of gray.
+By saying
+.BR \-grayscale ,
 you'll get a smaller JPEG file that takes less time to process.
 .TP
 .B \-rgb
@@ -149,56 +154,6 @@ about the same --- often a little smaller.
 .PP
 Switches for advanced users:
 .TP
-.BI \-precision " N"
-Create JPEG file with N-bit data precision.  N is 8, 12, or 16; default is 8.
-If N is 16, then
-.B -lossless
-must also be specified.
-.B Caution:
-12-bit and 16-bit JPEG is not yet widely implemented, so many decoders will be
-unable to view a 12-bit or 16-bit JPEG file at all.
-.TP
-.BI \-lossless " psv[,Pt]"
-Create a lossless JPEG file using the specified predictor selection value
-(1 through 7) and optional point transform (0 through
-.nh
-.I precision
-.hy
-- 1, where
-.nh
-.I precision
-.hy
-is the JPEG data precision in bits).  A point transform value of 0 (the
-default) is necessary in order to create a fully lossless JPEG file.  (A
-non-zero point transform value right-shifts the input samples by the specified
-number of bits, which is effectively a form of lossy color quantization.)
-.B Caution:
-lossless JPEG is not yet widely implemented, so many decoders will be unable to
-view a lossless JPEG file at all.  Note that the following features will be
-unavailable when compressing or decompressing a lossless JPEG file:
-.IP
-- Quality/quantization table selection
-.IP
-- Color space conversion (the JPEG image will use the same color space as the
-input image)
-.IP
-- Color quantization
-.IP
-- DCT/IDCT algorithm selection
-.IP
-- Smoothing
-.IP
-- Downsampling/upsampling
-.IP
-- IDCT scaling
-.IP
-- Partial image decompression
-.IP
-- Transformations using
-.B jpegtran
-.IP
-Any switches used to enable or configure those features will be ignored.
-.TP
 .B \-arithmetic
 Use arithmetic coding.
 .B Caution:
@@ -206,47 +161,35 @@ arithmetic coded JPEG is not yet widely implemented, so many decoders will be
 unable to view an arithmetic coded JPEG file at all.
 .TP
 .B \-dct int
-Use accurate integer DCT method (default).
+Use integer DCT method (default).
 .TP
 .B \-dct fast
-Use less accurate integer DCT method [legacy feature].
-When the Independent JPEG Group's software was first released in 1991, the
-compression time for a 1-megapixel JPEG image on a mainstream PC was measured
-in minutes.  Thus, the \fBfast\fR integer DCT algorithm provided noticeable
-performance benefits.  On modern CPUs running libjpeg-turbo, however, the
-compression time for a 1-megapixel JPEG image is measured in milliseconds, and
-thus the performance benefits of the \fBfast\fR algorithm are much less
-noticeable.  On modern x86/x86-64 CPUs that support AVX2 instructions, the
-\fBfast\fR and \fBint\fR methods have similar performance.  On other types of
-CPUs, the \fBfast\fR method is generally about 5-15% faster than the \fBint\fR
-method.
-
+Use fast integer DCT (less accurate).
+In libjpeg-turbo, the fast method is generally about 5-15% faster than the int
+method when using the x86/x86-64 SIMD extensions (results may vary with other
+SIMD implementations, or when using libjpeg-turbo without SIMD extensions.)
 For quality levels of 90 and below, there should be little or no perceptible
-quality difference between the two algorithms.  For quality levels above 90,
-however, the difference between the \fBfast\fR and \fBint\fR methods becomes
-more pronounced.  With quality=97, for instance, the \fBfast\fR method incurs
-generally about a 1-3 dB loss in PSNR relative to the \fBint\fR method, but
-this can be larger for some images.  Do not use the \fBfast\fR method with
-quality levels above 97.  The algorithm often degenerates at quality=98 and
-above and can actually produce a more lossy image than if lower quality levels
-had been used.  Also, in libjpeg-turbo, the \fBfast\fR method is not fully
-accelerated for quality levels above 97, so it will be slower than the
-\fBint\fR method.
+difference between the two algorithms.  For quality levels above 90, however,
+the difference between the fast and the int methods becomes more pronounced.
+With quality=97, for instance, the fast method incurs generally about a 1-3 dB
+loss (in PSNR) relative to the int method, but this can be larger for some
+images.  Do not use the fast method with quality levels above 97.  The
+algorithm often degenerates at quality=98 and above and can actually produce a
+more lossy image than if lower quality levels had been used.  Also, in
+libjpeg-turbo, the fast method is not fully accelerated for quality levels
+above 97, so it will be slower than the int method.
 .TP
 .B \-dct float
-Use floating-point DCT method [legacy feature].
-The \fBfloat\fR method does not produce significantly more accurate results
-than the \fBint\fR method, and it is much slower.  The \fBfloat\fR method may
-also give different results on different machines due to varying roundoff
-behavior, whereas the integer methods should give the same results on all
-machines.
-.TP
-.BI \-icc " file"
-Embed ICC color management profile contained in the specified file.
+Use floating-point DCT method.
+The float method is mainly a legacy feature.  It does not produce significantly
+more accurate results than the int method, and it is much slower.  The float
+method may also give different results on different machines due to varying
+roundoff behavior, whereas the integer methods should give the same results on
+all machines.
 .TP
 .BI \-restart " N"
-Emit a JPEG restart marker every N MCU rows, or every N MCU blocks (samples in
-lossless mode) if "B" is attached to the number.
+Emit a JPEG restart marker every N MCU rows, or every N MCU blocks if "B" is
+attached to the number.
 .B \-restart 0
 (the default) means no restart markers.
 .TP
@@ -259,7 +202,7 @@ Set limit for amount of memory to use in processing large images.  Value is
 in thousands of bytes, or millions of bytes if "M" is attached to the
 number.  For example,
 .B \-max 4m
-selects 4000000 bytes.  If more space is needed, an error will occur.
+selects 4000000 bytes.  If more space is needed, temporary files will be used.
 .TP
 .BI \-outfile " name"
 Send output image to the named file, not to standard output.
@@ -268,14 +211,6 @@ Send output image to the named file, not to standard output.
 Compress to memory instead of a file.  This feature was implemented mainly as a
 way of testing the in-memory destination manager (jpeg_mem_dest()), but it is
 also useful for benchmarking, since it reduces the I/O overhead.
-.TP
-.BI \-report
-Report compression progress.
-.TP
-.BI \-strict
-Treat all warnings as fatal.  Enabling this option will cause the compressor to
-abort if an LZW-compressed GIF input image contains incomplete or corrupt image
-data.
 .TP
 .B \-verbose
 Enable debug printout.  More
@@ -403,6 +338,11 @@ This file was modified by The libjpeg-turbo Project to include only information
 relevant to libjpeg-turbo, to wordsmith certain sections, and to describe
 features not present in libjpeg.
 .SH ISSUES
+Support for GIF input files was removed in cjpeg v6b due to concerns over
+the Unisys LZW patent.  Although this patent expired in 2006, cjpeg still
+lacks GIF support, for these historical reasons.  (Conversion of GIF files to
+JPEG is usually a bad idea anyway, since GIF is a 256-color format.)
+.PP
 Not all variants of BMP and Targa file formats are supported.
 .PP
 The

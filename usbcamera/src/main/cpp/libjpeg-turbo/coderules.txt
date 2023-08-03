@@ -14,7 +14,7 @@ is much more important than the details of just what that style is.
 In general we follow the recommendations of "Recommended C Style and Coding
 Standards" revision 6.1 (Cannon et al. as modified by Spencer, Keppel and
 Brader).  This document is available in the IJG FTP archive (see
-jpeg/doc/cstyle.ms.tbl.Z, or cstyle.txt.Z for those without nroff/tbl).
+src.jpeg/doc/cstyle.ms.tbl.Z, or cstyle.txt.Z for those without nroff/tbl).
 
 Block comments should be laid out thusly:
 

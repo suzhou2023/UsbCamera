@@ -3,8 +3,8 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * libjpeg-turbo Modifications:
- * Copyright (C) 2022, D. R. Commander.
+ * It was modified by The libjpeg-turbo Project to include only code
+ * relevant to libjpeg-turbo.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -17,10 +17,7 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
-#include "jsamplecomp.h"
 
-
-#if BITS_IN_JSAMPLE == 8
 
 /*
  * jpeg_zigzag_order[i] is the zigzag-order position of the i'th element
@@ -56,7 +53,7 @@ const int jpeg_zigzag_order[DCTSIZE2] = {
  * fake entries.
  */
 
-const int jpeg_natural_order[DCTSIZE2 + 16] = {
+const int jpeg_natural_order[DCTSIZE2+16] = {
   0,  1,  8, 16,  9,  2,  3, 10,
  17, 24, 32, 25, 18, 11,  4,  5,
  12, 19, 26, 33, 40, 48, 41, 34,
@@ -75,7 +72,7 @@ const int jpeg_natural_order[DCTSIZE2 + 16] = {
  */
 
 GLOBAL(long)
-jdiv_round_up(long a, long b)
+jdiv_round_up (long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
 /* Assumes a >= 0, b > 0 */
 {
@@ -84,7 +81,7 @@ jdiv_round_up(long a, long b)
 
 
 GLOBAL(long)
-jround_up(long a, long b)
+jround_up (long a, long b)
 /* Compute a rounded up to next multiple of b, ie, ceil(a/b)*b */
 /* Assumes a >= 0, b > 0 */
 {
@@ -92,24 +89,19 @@ jround_up(long a, long b)
   return a - (a % b);
 }
 
-#endif /* BITS_IN_JSAMPLE == 8 */
-
-
-#if BITS_IN_JSAMPLE != 16 || \
-    defined(C_LOSSLESS_SUPPORTED) || defined(D_LOSSLESS_SUPPORTED)
 
 GLOBAL(void)
-_jcopy_sample_rows(_JSAMPARRAY input_array, int source_row,
-                   _JSAMPARRAY output_array, int dest_row, int num_rows,
-                   JDIMENSION num_cols)
+jcopy_sample_rows (JSAMPARRAY input_array, int source_row,
+                   JSAMPARRAY output_array, int dest_row,
+                   int num_rows, JDIMENSION num_cols)
 /* Copy some rows of samples from one place to another.
  * num_rows rows are copied from input_array[source_row++]
  * to output_array[dest_row++]; these areas may overlap for duplication.
  * The source and destination arrays must be at least as wide as num_cols.
  */
 {
-  register _JSAMPROW inptr, outptr;
-  register size_t count = (size_t)(num_cols * sizeof(_JSAMPLE));
+  register JSAMPROW inptr, outptr;
+  register size_t count = (size_t) (num_cols * sizeof(JSAMPLE));
   register int row;
 
   input_array += source_row;
@@ -118,31 +110,24 @@ _jcopy_sample_rows(_JSAMPARRAY input_array, int source_row,
   for (row = num_rows; row > 0; row--) {
     inptr = *input_array++;
     outptr = *output_array++;
-    memcpy(outptr, inptr, count);
+    MEMCOPY(outptr, inptr, count);
   }
 }
 
-#endif /* BITS_IN_JSAMPLE != 16 ||
-          defined(C_LOSSLESS_SUPPORTED) || defined(D_LOSSLESS_SUPPORTED) */
-
-
-#if BITS_IN_JSAMPLE == 8
 
 GLOBAL(void)
-jcopy_block_row(JBLOCKROW input_row, JBLOCKROW output_row,
-                JDIMENSION num_blocks)
+jcopy_block_row (JBLOCKROW input_row, JBLOCKROW output_row,
+                 JDIMENSION num_blocks)
 /* Copy a row of coefficient blocks from one place to another. */
 {
-  memcpy(output_row, input_row, num_blocks * (DCTSIZE2 * sizeof(JCOEF)));
+  MEMCOPY(output_row, input_row, num_blocks * (DCTSIZE2 * sizeof(JCOEF)));
 }
 
 
 GLOBAL(void)
-jzero_far(void *target, size_t bytestozero)
+jzero_far (void *target, size_t bytestozero)
 /* Zero out a chunk of memory. */
 /* This might be sample-array data, block-array data, or alloc_large data. */
 {
-  memset(target, 0, bytestozero);
+  MEMZERO(target, bytestozero);
 }
-
-#endif /* BITS_IN_JSAMPLE == 8 */
